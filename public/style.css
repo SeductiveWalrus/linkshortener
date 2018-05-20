@@ -1,0 +1,30 @@
+body{
+    background-image: url("/assets/background.jpg");
+}
+
+.title{
+    color: rgb(95, 111, 184);
+}
+
+.container{
+    left: 40%;
+    position: fixed;
+    top: 30%;
+    
+}
+
+.urlInput{
+    border-style: solid;
+    border-width: 0.2em; 
+    border-color: rgb(95, 111, 184);
+    width: 30em;
+    height: 1.5em;
+}
+
+.submitButton{
+    border-style: none;
+    height: 1.95em;
+    background-color: rgb(95, 111, 184);
+    color: rgb(46, 53, 82);
+    font-size: 0.85em;
+}
