@@ -7,6 +7,13 @@ body{
     display: inline;
 }
 
+.text404{
+    color: rgb(95, 111, 184);
+    top: 40%;
+    left: 40%;
+    position: fixed;
+}
+
 .container{
     left: 40%;
     position: fixed;

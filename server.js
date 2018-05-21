@@ -35,6 +35,10 @@ app.get("/:id", (req, res, next) =>{
     }else next();
 });
 
+app.get("*", (req, res) =>{
+    res.sendFile(__dirname + "/public/404.html");
+})
+
 app.post("/shorten", (req, res) =>{
     if(req.body == undefined || req.body == "" || req.body == null){
         res.send("No URL found");
