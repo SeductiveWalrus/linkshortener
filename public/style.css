@@ -4,6 +4,7 @@ body{
 
 .title{
     color: rgb(95, 111, 184);
+    display: inline;
 }
 
 .container{
@@ -27,4 +28,17 @@ body{
     background-color: rgb(95, 111, 184);
     color: rgb(46, 53, 82);
     font-size: 0.85em;
+}
+
+.resultContainer{
+    display: none;
+}
+
+.copyButton{
+    border-style: none;
+    background-color: rgb(95, 111, 184);
+    color: rgb(46, 53, 82);
+    font-size: 0.85em;
+    height: 2.5em;
+    margin-left: 1em; 
 }
