@@ -1,5 +1,12 @@
-//Express
+//Imports
 let express = require("express");
+let fs = require("fs");
+let redis = require("redis");
+let bodyParser = require("body-parser");
+let urlRegex = require("url-regex");
+var datetime = require('node-datetime');
+
+//Express
 let app = express();
 
 //Server
@@ -7,17 +14,12 @@ const PORT = process.env.PORT || 80;
 let server = app.listen(PORT, () =>{console.log(`Listening on port ${PORT}`);});
 
 //File System
-let fs = require("fs");
 console.log("Fetching data...");
 let links = JSON.parse(fs.readFileSync(__dirname + "/data/links.json"));
 let bans = JSON.parse(fs.readFileSync(__dirname + "/data/bans.json"));
 console.log("Done");
 
-//Redis
-let redis = require("redis");
-
 //Middleware 
-let bodyParser = require("body-parser");
 app.use(bodyParser.text());
 app.use(express.static("public"));
 
@@ -32,7 +34,7 @@ app.get("/shorten", (req, res) =>{
 
 app.get("/:id", (req, res, next) =>{
     if(links[req.params.id]){
-        res.redirect(301, links[req.params.id]);
+        res.redirect(301, links[req.params.id]["url"]);
     }else next();
 });
 
@@ -53,7 +55,7 @@ app.post("/shorten", (req, res) =>{
     }
     if(typeof req.body === "string"){
         if(isUrlValid(req.body)){
-            res.send("http://" + req.headers.host + "/" + shortenURL(req.body));
+            res.send("http://" + req.headers.host + "/" + shortenURL(req.body, ip));
         }else res.send("Invalid Link");
     }else res.send("Invalid Link");
 });
@@ -68,10 +70,15 @@ function randomString(length){
     return string;
 }
 
-function shortenURL(url){
+function shortenURL(url, ip){
+    console.log(`${ip} created a link`)
     let id = randomString(4);
     if(links[id]) return shortenURL(url);
-    links[id] = url;
+    links[id] = {
+        url: url,
+        ip: ip,
+        createdOn: currentDate()
+    }
     updateLinksFile();
     return id; 
 }
@@ -89,6 +96,10 @@ function updateBansFile(){
 }
 
 function isUrlValid(url){
-    let urlRegex = require("url-regex");
     return urlRegex().test(url);
+}
+
+function currentDate(){
+    let dt = datetime.create();
+    return dt.format('Y-m-d H:M:S');
 }
