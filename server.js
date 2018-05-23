@@ -10,6 +10,7 @@ let server = app.listen(PORT, () =>{console.log(`Listening on port ${PORT}`);});
 let fs = require("fs");
 console.log("Fetching data...");
 let links = JSON.parse(fs.readFileSync(__dirname + "/data/links.json"));
+let bans = JSON.parse(fs.readFileSync(__dirname + "/data/bans.json"));
 console.log("Done");
 
 //Redis
@@ -40,6 +41,12 @@ app.get("*", (req, res) =>{
 })
 
 app.post("/shorten", (req, res) =>{
+    let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+    if(bans[ip]){
+        res.send(`You have been banned for ${bans[ip]["reason"]}`);
+        console.log(`Attempted access from banned: ${ip}`);
+        return;
+    }
     if(req.body == undefined || req.body == "" || req.body == null){
         res.send("No URL found");
         return;
@@ -71,6 +78,12 @@ function shortenURL(url){
 
 function updateLinksFile(){
     fs.writeFile(__dirname + "/data/links.json", JSON.stringify(links, null, 2), err =>{
+        if(err) throw err;
+    });
+}
+
+function updateBansFile(){
+    fs.writeFile(__dirname + "/data/bans.json", JSON.stringify(bans, null, 2), err =>{
         if(err) throw err;
     });
 }
