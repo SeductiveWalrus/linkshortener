@@ -56,7 +56,7 @@ function randomString(length){
     const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
     let string = "";
     for(i = 0; i < length; i++){
-        string += characters[Math.round(Math.random() * characters.length)];
+        string += characters[Math.round(Math.random() * (characters.length - 1))];
     }
     return string;
 }
