@@ -63,7 +63,7 @@ function randomString(length){
 
 function shortenURL(url){
     let id = randomString(4);
-    if(links[id]) shortenURL(url);
+    if(links[id]) return shortenURL(url);
     links[id] = url;
     return id;
     updateLinksFile();
