@@ -7,6 +7,14 @@ body{
     display: inline;
 }
 
+.adminForm{
+    text-align: center;
+}
+
+.adminForm h1{
+    color: rgb(95, 111, 184);
+}
+
 .text404{
     color: rgb(95, 111, 184);
     top: 40%;

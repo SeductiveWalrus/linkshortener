@@ -17,10 +17,12 @@ let server = app.listen(PORT, () =>{console.log(`Listening on port ${PORT}`);});
 console.log("Fetching data...");
 let links = JSON.parse(fs.readFileSync(__dirname + "/data/links.json"));
 let bans = JSON.parse(fs.readFileSync(__dirname + "/data/bans.json"));
+let adminKeys = JSON.parse(fs.readFileSync(__dirname + "/data/adminKeys.json"))["array"];
 console.log("Done");
 
 //Middleware 
 app.use(bodyParser.text());
+app.use(bodyParser.json());
 app.use(express.static("public"));
 
 //Routing
@@ -38,9 +40,13 @@ app.get("/:id", (req, res, next) =>{
     }else next();
 });
 
+app.get("/admin", (req, res) =>{
+    res.sendFile(__dirname + "/public/admin.html");
+});
+
 app.get("*", (req, res) =>{
     res.sendFile(__dirname + "/public/404.html");
-})
+});
 
 app.post("/shorten", (req, res) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
@@ -58,6 +64,37 @@ app.post("/shorten", (req, res) =>{
             res.send("http://" + req.headers.host + "/" + shortenURL(req.body, ip));
         }else res.send("Invalid Link");
     }else res.send("Invalid Link");
+});
+
+app.post("/admin/:action", (req, res) =>{
+    console.log("Admin request made");
+    let body = req.body;
+    if(body){
+        if(adminKeys.includes(body["key"])){
+            let action = req.params.action;
+            switch(action){
+                case "banUser":
+                res.send(banUser(body["param1"], body["param2"]));
+                break;
+
+                case "unbanUser":
+                res.send(unbanUser(body["param1"]));
+                break;
+
+                case "deleteLink":
+                res.send(deleteLink(body["param1"]));
+                break;
+
+                case "wipeLinks":
+                res.send(wipeLinks());
+                break;
+
+                default:
+                res.send("Invalid action");
+            }
+            console.log(`${body["key"]} performed ${action}`);
+        }else return res.send("Invalid key")
+    }else return res.send("Insufficient information")
 });
 
 //Abstractions
@@ -102,4 +139,38 @@ function isUrlValid(url){
 function currentDate(){
     let dt = datetime.create();
     return dt.format('Y-m-d H:M:S');
+}
+
+function banUser(ip, reason){
+    if(!ip || !reason) return "Specify an ip and reason";
+    bans[ip] = {
+        reason: reason,
+        bannedOn: currentDate()
+    };
+    updateBansFile();
+    console.log(`${ip} was banned for ${reason}`);
+    return `Banned ${ip} for "${reason}"`;
+}
+
+function unbanUser(ip){
+    if(!ip) return "Specify an ip";
+    delete bans[ip];
+    updateBansFile();
+    console.log(`${ip} was unbanned`);
+    return `Unbanned ${ip}`;
+}
+
+function deleteLink(id){
+    if(!id || !links[id]) return "Specify a valid id";
+    delete links[id];
+    updateLinksFile();
+    console.log(`Link ${id} was deleted`)
+    return `Deleted link ${id}`;
+}
+
+function wipeLinks(){
+    links = {};
+    updateLinksFile();
+    console.log("All links wiped");
+    return "All links wiped";
 }
