@@ -26,7 +26,7 @@ console.log("Done");
 const PORT = process.env.PORT || 80;
 const SECURE_PORT = process.env.PORT || 443;
 let server = https.createServer(httpsOptions, app).listen(SECURE_PORT);
-let server_unsecure = http.createServer(app);
+let server_unsecure = http.createServer(app).listen(PORT);
 
 //Middleware 
 app.use((req, res, next) =>{
