@@ -5,22 +5,37 @@ let redis = require("redis");
 let bodyParser = require("body-parser");
 let urlRegex = require("url-regex");
 var datetime = require('node-datetime');
+let http = require("http");
+let https = require("https");
 
 //Express
 let app = express();
-
-//Server
-const PORT = process.env.PORT || 80;
-let server = app.listen(PORT, () =>{console.log(`Listening on port ${PORT}`);});
 
 //File System
 console.log("Fetching data...");
 let links = JSON.parse(fs.readFileSync(__dirname + "/data/links.json"));
 let bans = JSON.parse(fs.readFileSync(__dirname + "/data/bans.json"));
 let adminKeys = JSON.parse(fs.readFileSync(__dirname + "/data/adminKeys.json"))["array"];
+const httpsOptions = {
+    key: fs.readFileSync('/etc/letsencrypt/live/sedwalrus.cf/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/sedwalrus.cf/fullchain.pem')
+}
 console.log("Done");
 
+//Server
+const PORT = process.env.PORT || 80;
+const SECURE_PORT = process.env.PORT || 443;
+let server = https.createServer(httpsOptions, app).listen(SECURE_PORT);
+let server_unsecure = http.createServer(app);
+
 //Middleware 
+app.use((req, res, next) =>{
+    if(req.secure) {
+        next();
+    }else{
+        res.redirect('https://' + req.headers.host + req.url);
+    }
+});
 app.use(bodyParser.text());
 app.use(bodyParser.json());
 app.use(express.static("public"));
