@@ -16,10 +16,11 @@ console.log("Fetching data...");
 let links = JSON.parse(fs.readFileSync(__dirname + "/data/links.json"));
 let bans = JSON.parse(fs.readFileSync(__dirname + "/data/bans.json"));
 let adminKeys = JSON.parse(fs.readFileSync(__dirname + "/data/adminKeys.json"))["array"];
+let certLocations = JSON.parse(fs.readFileSync(__dirname + "/data/certLocations.json"));
 const httpsOptions = {
-    key: fs.readFileSync('/etc/letsencrypt/live/sedwalrus.cf/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/sedwalrus.cf/fullchain.pem')
-}
+    key: fs.readFileSync(certLocations["privateKey"]),
+    cert: fs.readFileSync(certLocations["cert"])
+};
 console.log("Done");
 
 //Server
