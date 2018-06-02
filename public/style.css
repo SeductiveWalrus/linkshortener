@@ -1,5 +1,7 @@
 body{
     background-image: url("/assets/background.jpg");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
 .title{
@@ -56,4 +58,10 @@ body{
     font-size: 0.85em;
     height: 2.5em;
     margin-left: 1em; 
+}
+
+.linksDisplay table, th, td{
+    border: 1px solid rgb(46, 53, 82);
+    color: rgb(46, 53, 82);
+    background-color: rgb(95, 111, 184);
 }

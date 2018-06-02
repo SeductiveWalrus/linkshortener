@@ -41,11 +41,37 @@ if(document.getElementById("adminForm")){
         };
         request.open("POST", "/admin/" + document.getElementById("action").value);
         request.setRequestHeader("Content-Type", "application/json");
-        let data = {
+        request.send(JSON.stringify({
             key: document.getElementById("key").value,
             param1: document.getElementById("param1").value,
             param2: document.getElementById("param2").value
-        }
-        request.send(JSON.stringify(data));
+        }));
     }
+}
+
+if(document.getElementById("linksForm")){
+    let linksForm = document.getElementById("linksForm");
+    linksForm.onsubmit = e =>{
+        e.preventDefault();
+        let request = new XMLHttpRequest();
+        request.onreadystatechange = () =>{
+            if(request.readyState == 4 && request.status == 200){
+                linksForm.style.display = "none";
+                let table = document.getElementById("table");
+                table.style.display = "initial";
+                let links = JSON.parse(request.response);
+                let keys = Object.keys(links);
+                for(i = 0; i < keys.length; i++){
+                    table.innerHTML += `<tr><td>${keys[i]}</td><td>${links[keys[i]]["createdOn"]}</td><td>${links[keys[i]]["ip"]}</td><td><a target="_blank" href="${links[keys[i]]["url"]}">${links[keys[i]]["url"]}</a></td></tr>`
+                }
+            }else if(request.status == 400){
+                document.getElementById("miscResult").innerHTML = request.response;
+            }
+        };
+        request.open("POST", "/getlinks");
+        request.setRequestHeader("Content-Type", "application/json");
+        request.send(JSON.stringify({
+           key: document.getElementById("key").value 
+        }));
+    };
 }

@@ -60,8 +60,23 @@ app.get("/admin", (req, res) =>{
     res.sendFile(__dirname + "/public/admin.html");
 });
 
+app.get("/links", (req, res) =>{
+    res.sendFile(__dirname + "/public/viewlinks.html");
+});
+
 app.get("*", (req, res) =>{
     res.sendFile(__dirname + "/public/404.html");
+});
+
+app.post("/getlinks", (req, res) =>{
+    let body = req.body;
+    if(!body["key"] || !adminKeys.includes(body["key"])){
+        res.status(400);
+        res.send("Invalid Key");
+        return;
+    }
+    res.setHeader("Content-Type", "application/json");
+    res.send(JSON.stringify(links));
 });
 
 app.post("/shorten", (req, res) =>{
