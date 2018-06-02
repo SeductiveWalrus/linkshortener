@@ -77,13 +77,12 @@ app.post("/shorten", (req, res) =>{
     }
     if(typeof req.body === "string"){
         if(isUrlValid(req.body)){
-            res.send("http://" + req.headers.host + "/" + shortenURL(req.body, ip));
+            res.send("https://" + req.headers.host + "/" + shortenURL(req.body, ip));
         }else res.send("Invalid Link");
     }else res.send("Invalid Link");
 });
 
 app.post("/admin/:action", (req, res) =>{
-    console.log("Admin request made");
     let body = req.body;
     if(body){
         if(adminKeys.includes(body["key"])){
@@ -109,8 +108,8 @@ app.post("/admin/:action", (req, res) =>{
                 res.send("Invalid action");
             }
             console.log(`${body["key"]} performed ${action}`);
-        }else return res.send("Invalid key")
-    }else return res.send("Insufficient information")
+        }else return res.send("Invalid key");
+    }else return res.send("Insufficient information");
 });
 
 //Abstractions
@@ -159,6 +158,7 @@ function currentDate(){
 
 function banUser(ip, reason){
     if(!ip || !reason) return "Specify an ip and reason";
+    if(bans[ip]) return `${ip} was already banned for ${bans[ip]["reason"]}`;
     bans[ip] = {
         reason: reason,
         bannedOn: currentDate()
@@ -170,6 +170,7 @@ function banUser(ip, reason){
 
 function unbanUser(ip){
     if(!ip) return "Specify an ip";
+    if(!bans[ip]) return `${ip} is not banned`;
     delete bans[ip];
     updateBansFile();
     console.log(`${ip} was unbanned`);
