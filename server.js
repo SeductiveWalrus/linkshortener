@@ -90,9 +90,10 @@ app.post("/shorten", (req, res) =>{
         res.send("No URL found");
         return;
     }
-    if(typeof req.body === "string"){
-        if(isUrlValid(req.body)){
-            res.send("https://" + req.headers.host + "/" + shortenURL(req.body, ip));
+    if(typeof req.body === "string" || req.body["url"]){
+        let longURL = req.body["url"] || req.body;
+        if(isUrlValid(longURL)){
+            res.send("https://" + longURL + "/" + shortenURL(longURL, ip));
         }else res.send("Invalid Link");
     }else res.send("Invalid Link");
 });
