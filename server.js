@@ -93,7 +93,7 @@ app.post("/shorten", (req, res) =>{
     if(typeof req.body === "string" || req.body["url"]){
         let longURL = req.body["url"] || req.body;
         if(isUrlValid(longURL)){
-            res.send("https://" + longURL + "/" + shortenURL(longURL, ip));
+            res.send("https://" + req.headers.host + "/" + shortenURL(longURL, ip));
         }else res.send("Invalid Link");
     }else res.send("Invalid Link");
 });
