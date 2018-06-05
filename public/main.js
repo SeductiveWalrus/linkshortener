@@ -29,6 +29,42 @@ if(document.getElementById("urlForm")){
     };
 }
 
+if(document.getElementById("customUrlForm")){
+    let customUrlForm = document.getElementById("customUrlForm");
+    customUrlForm.onsubmit = e =>{
+    e.preventDefault();
+    let urlInput = document.getElementById("url");
+    let nameInput = document.getElementById("name");
+    let urlResult = document.getElementById("urlResult");
+    let copyButton = document.getElementById("copyButton");
+    copyButton.onclick = e =>{
+        let textarea = document.createElement("textarea");
+        textarea.id = "temp_element";
+        textarea.style.height = 0;
+        document.body.appendChild(textarea);
+        textarea.value = urlResult.innerHTML;
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+    }
+    let URL = urlInput.value;
+    let name = nameInput.value;
+    let request = new XMLHttpRequest();
+    request.onreadystatechange = () =>{
+        if(request.readyState == 4 && request.status == 200){
+            document.getElementById("resultContainer").style.display = "initial";
+            urlResult.innerHTML = request.response;
+        }
+    };
+    request.open("POST", "/custom");
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify({
+        name: name,
+        url: URL
+    }));
+    };
+}
+
 if(document.getElementById("adminForm")){
     let adminForm = document.getElementById("adminForm");
     adminForm.onsubmit = e =>{
