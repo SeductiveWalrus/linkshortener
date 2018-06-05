@@ -87,7 +87,9 @@ app.post("/getlinks", (req, res) =>{
         return;
     }
     res.setHeader("Content-Type", "application/json");
-    res.send(JSON.stringify(links));
+    let l = links;
+    let c = customLinks;
+    res.send(JSON.stringify(Object.assign({}, l, c)));
 });
 
 app.post("/shorten", (req, res) =>{
@@ -117,7 +119,6 @@ app.post("/custom", (req, res) =>{
         return;
     }
     let body = req.body;
-    console.log(body);
     if(!body["url"] || !body["name"]) return res.send("Insufficient information");
     if(!isUrlValid(body["url"])) return res.send("Invalid Link");
     if(customLinks[body["name"]]) return res.send("This custom link is already in use");
