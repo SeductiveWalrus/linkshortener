@@ -14,7 +14,6 @@ let app = express();
 //File System
 console.log("Fetching data...");
 let links = JSON.parse(fs.readFileSync(__dirname + "/data/links.json"));
-let customLinks = JSON.parse(fs.readFileSync(__dirname + "/data/customLinks.json"));
 let bans = JSON.parse(fs.readFileSync(__dirname + "/data/bans.json"));
 let adminKeys = JSON.parse(fs.readFileSync(__dirname + "/data/adminKeys.json"))["array"];
 let certLocations = JSON.parse(fs.readFileSync(__dirname + "/data/certLocations.json"));
@@ -46,8 +45,7 @@ app.use((req, res, next) =>{
         res.redirect('https://' + req.headers.host + req.url);
     }
 });
-
-app.use(bodyParser.text());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
@@ -60,17 +58,12 @@ app.get("/shorten", (req, res) =>{
     res.sendFile(__dirname + "/public/shorten.html");
 });
 
-app.get("/:id", (req, res, next) =>{
-    if(links[req.params.id]){
-        res.redirect(301, links[req.params.id]["url"]);
+// Shortened Urls
+app.get("/:name", (req, res, next) =>{
+    if(links[req.params.name]){
+        res.redirect(301, links[req.params.name]["url"]);
     }else next();
 });
-
-app.get("/:custom", (req, res, next) =>{
-    if(customLinks[req.params.custom]){
-        res.redirect(301, customLinks[req.params.custom]["url"])
-    }else next();
-})
 
 app.get("/admin", (req, res) =>{
     res.sendFile(__dirname + "/public/admin.html");
@@ -97,41 +90,30 @@ app.post("/getlinks", (req, res) =>{
 
 app.post("/shorten", (req, res) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
-    if(req.body == undefined || req.body == "" || req.body == null){
-        res.statusCode = 409;
-        res.send("No URL found");
-        return;
-    }
-
-    let longURL = req.body["url"] || req.body;
-    if(typeof req.body === "string" || req.body["url"] && isUrlValid(longURL)){
-        res.statusCode = 200;
-        res.send(`https://${req.headers.host}/${shortenURL(longURL, ip)}`);
-    }else{
-        res.statusCode = 409;
-        res.send("Invalid Link");  
-    } 
-});
-
-app.post("/custom", (req, res) =>{
-    let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
     let body = req.body;
-    console.log(body);
-    if(!body["url"] || !body["name"]){
+    if(!body["url"]){
         res.statusCode = 409;
         res.send("Insufficient information");
+        return;
     } 
+
     if(!isUrlValid(body["url"])){
         res.statusCode = 409;
         res.send("Invalid Link");  
+        return;
     } 
-    if(customLinks[body["name"]]){
+
+    if(links[body["name"]]){
         res.statusCode = 409;
         res.send("This custom link is already in use"); 
+        return;
     }   
 
+    let longURL = body["url"];
+    let name = body["name"];
+
     res.statusCode = 200;
-    res.send(`https://${req.headers.host}/${customURL(body["name"], body["url"], ip)}`)
+    res.send(`https://${req.headers.host}/${shortenURL(name, longURL, ip)}`);
 });
 
 app.post("/admin/:action", (req, res) =>{
@@ -178,37 +160,24 @@ function randomString(length){
     return string;
 }
 
-function shortenURL(url, ip){
-    console.log(`${ip} created a link`)
-    let id = randomString(4);
-    if(links[id]) return shortenURL(url);
-    links[id] = {
-        url: url,
-        ip: ip,
-        createdOn: currentDate()
+function shortenURL(name, url, ip){
+    if(name === "" || !name){
+        name = randomString(4);
+        if(links[name]) return shortenURL(url);
     }
-    updateLinksFile();
-    return id; 
-}
 
-function customURL(name, url, ip){
-    customLinks[name] = {
+    links[name] = {
         url: url,
         ip: ip,
         createdOn: currentDate()
     }
-    updateCustomLinksFile();
+
+    updateLinksFile();
     return name;
 }
 
 function updateLinksFile(){
     fs.writeFile(__dirname + "/data/links.json", JSON.stringify(links, null, 2), err =>{
-        if(err) throw err;
-    });
-}
-
-function updateCustomLinksFile(){
-    fs.writeFile(__dirname + "/data/customLinks.json", JSON.stringify(customLinks, null, 2), err =>{
         if(err) throw err;
     });
 }

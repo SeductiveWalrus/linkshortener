@@ -26,14 +26,13 @@ document.body.onkeyup = e =>{
 };
 
 SUBMIT_BUTTON.onclick = e =>{
-    console.log("Button pressed")
     e.preventDefault();
     SUBMIT_BUTTON.className = "btn btn-info";
     SUBMIT_BUTTON.innerHTML = "Processing...";
     SUBMIT_BUTTON.disabled = true;
     let longUrl = URL_INPUT.value; 
     let name = NAME_INPUT.value;
-    if(name === ""){shortenUrl(longUrl);}else{shortenCustomUrl(name, longUrl);}
+    shortenUrl(name, longUrl);
     SUBMIT_BUTTON.className = "btn btn-primary";
     SUBMIT_BUTTON.innerHTML = "Submit URL";
     SUBMIT_BUTTON.disabled = false;
@@ -43,30 +42,17 @@ SUBMIT_BUTTON.onclick = e =>{
 
 // Abstractions
 
-function shortenUrl(url){
+function shortenUrl(linkName, url){
     let request = new XMLHttpRequest();
     request.onreadystatechange = () =>{
         if(request.readyState == 4) processResponse(request);
     }
     request.open("POST", "/shorten");
-    request.setRequestHeader("Content-Type", "application/json");
-    request.send(url);
-}
-
-function shortenCustomUrl(linkName, url){
-    let request = new XMLHttpRequest();
-    request.onreadystatechange = () =>{
-        if(request.readyState === 4){
-            if(request.readyState == 4) processResponse(request);
-        }
-    };
-    request.open("POST", "/custom");
-    request.setRequestHeader("Content-Type", "application/json");
+    request.setRequestHeader("Content-Type", "application/json")
     request.send(JSON.stringify({
         name:linkName,
-        url:url
-    }
-    ));
+        url:url 
+    }));
 }
 
 function processResponse(request){
@@ -85,7 +71,7 @@ function processResponse(request){
 
         case 409:
         MODAL.title.innerHTML = "409: Conflict";
-        MODAL.body.innerHTML = "Something you did created server-side conflict. Perhaps the name for your link is already in use. Here's the response: " + request.response;
+        MODAL.body.innerHTML = "Something you did created server-side conflict. You might have a typo. Here's the response: " + request.response;
         MODAL.footer.innerHTML = '<button type="button" class="btn btn-primary" id="modalclosebutton">Ok</button>'
         break;
 
