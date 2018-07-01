@@ -124,9 +124,19 @@ app.post("/custom", (req, res) =>{
     }
     let body = req.body;
     console.log(body);
-    if(!body["url"] || !body["name"]) return res.send("Insufficient information");
-    if(!isUrlValid(body["url"])) return res.send("Invalid Link");
-    if(customLinks[body["name"]]) return res.send("This custom link is already in use");
+    if(!body["url"] || !body["name"]){
+        res.statusCode = 409;
+        res.send("Insufficient information");
+    } 
+    if(!isUrlValid(body["url"])){
+        res.statusCode = 409;
+        res.send("Invalid Link");  
+    } 
+    if(customLinks[body["name"]]){
+        res.statusCode = 409;
+        res.send("This custom link is already in use"); 
+    }   
+
     res.statusCode = 200;
     res.send(`https://${req.headers.host}/${customURL(body["name"], body["url"], ip)}`)
 });

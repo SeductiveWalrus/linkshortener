@@ -33,7 +33,7 @@ SUBMIT_BUTTON.onclick = e =>{
     SUBMIT_BUTTON.disabled = true;
     let longUrl = URL_INPUT.value; 
     let name = NAME_INPUT.value;
-    if(name === null | name === "" | name.length === 0){shortenUrl(longUrl);}else{shortenCustomUrl(longUrl);}
+    if(name === null | name === "" | name.length === 0){shortenUrl(longUrl);}else{shortenCustomUrl(name, longUrl);}
     SUBMIT_BUTTON.className = "btn btn-primary";
     SUBMIT_BUTTON.innerHTML = "Submit URL";
     SUBMIT_BUTTON.disabled = false;
