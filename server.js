@@ -23,7 +23,7 @@ const httpsOptions = {
     cert: fs.readFileSync(certLocations["cert"])
 };
 console.log("Done");
-
+6
 //Server
 const PORT = process.env.PORT || 80;
 const SECURE_PORT = process.env.PORT || 443;
@@ -82,46 +82,52 @@ app.get("*", (req, res) =>{
 app.post("/getlinks", (req, res) =>{
     let body = req.body;
     if(!body["key"] || !adminKeys.includes(body["key"])){
-        res.status(400);
+        res.status(409);
         res.send("Invalid Key");
         return;
     }
     res.setHeader("Content-Type", "application/json");
-    let l = links;
-    let c = customLinks;
-    res.send(JSON.stringify(Object.assign({}, l, c)));
+    res.send(JSON.stringify(links));
 });
 
 app.post("/shorten", (req, res) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
     if(bans[ip]){
+        res.statusCode = 403;
         res.send(`You have been banned for ${bans[ip]["reason"]}`);
         console.log(`Attempted access from banned: ${ip}`);
         return;
     }
     if(req.body == undefined || req.body == "" || req.body == null){
+        res.statusCode = 409;
         res.send("No URL found");
         return;
     }
-    if(typeof req.body === "string" || req.body["url"]){
-        let longURL = req.body["url"] || req.body;
-        if(isUrlValid(longURL)){
-            res.send(`https://${req.headers.host}/${shortenURL(longURL, ip)}`);
-        }else res.send("Invalid Link");
-    }else res.send("Invalid Link");
+
+    let longURL = req.body["url"] || req.body;
+    if(typeof req.body === "string" || req.body["url"] && isUrlValid(longURL)){
+        res.statusCode = 200;
+        res.send(`https://${req.headers.host}/${shortenURL(longURL, ip)}`);
+    }else{
+        res.statusCode = 409;
+        res.send("Invalid Link");  
+    } 
 });
 
 app.post("/custom", (req, res) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
     if(bans[ip]){
+        res.statusCode = 403;
         res.send(`You have been banned for ${bans[ip]["reason"]}`);
         console.log(`Attempted access from banned: ${ip}`);
         return;
     }
     let body = req.body;
+    console.log(body);
     if(!body["url"] || !body["name"]) return res.send("Insufficient information");
     if(!isUrlValid(body["url"])) return res.send("Invalid Link");
     if(customLinks[body["name"]]) return res.send("This custom link is already in use");
+    res.statusCode = 200;
     res.send(`https://${req.headers.host}/${customURL(body["name"], body["url"], ip)}`)
 });
 
