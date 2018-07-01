@@ -30,11 +30,28 @@ let server = https.createServer(httpsOptions, app).listen(SECURE_PORT);
 let server_unsecure = http.createServer(app).listen(PORT);
 
 //Middleware 
+
 app.use((req, res, next) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
     if(bans[ip]){
         res.statusCode = 403;
         res.sendFile(__dirname + "/public/403.html");
+    }else next();
+});
+
+let recentReq= {};
+app.use((req, res, next) =>{
+    let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+    if(!recentReq[ip]) recentReq[ip] = 0;
+    recentReq[ip]++;    
+    setTimeout(() =>{
+        recentReq[ip] = 0;
+    }, 8000);
+    if(recentReq[ip] >= 12){
+        if(!bans[ip]){
+            banUser(ip, "Request Spam");
+            next(); 
+        }
     }else next();
 });
 

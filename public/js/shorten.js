@@ -33,11 +33,13 @@ SUBMIT_BUTTON.onclick = e =>{
     let longUrl = URL_INPUT.value; 
     let name = NAME_INPUT.value;
     shortenUrl(name, longUrl);
-    SUBMIT_BUTTON.className = "btn btn-primary";
-    SUBMIT_BUTTON.innerHTML = "Submit URL";
-    SUBMIT_BUTTON.disabled = false;
-    NAME_INPUT.value = "";
-    URL_INPUT.value = "";
+    setTimeout(() =>{
+        SUBMIT_BUTTON.className = "btn btn-primary";
+        SUBMIT_BUTTON.innerHTML = "Submit URL";
+        SUBMIT_BUTTON.disabled = false;
+        NAME_INPUT.value = "";
+        URL_INPUT.value = "";
+    }, 300)
 };
 
 // Abstractions
