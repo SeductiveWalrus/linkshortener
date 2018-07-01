@@ -33,7 +33,7 @@ SUBMIT_BUTTON.onclick = e =>{
     SUBMIT_BUTTON.disabled = true;
     let longUrl = URL_INPUT.value; 
     let name = NAME_INPUT.value;
-    if(name === null | name === "" | name.length === 0){shortenUrl(longUrl);}else{shortenCustomUrl(name, longUrl);}
+    if(name === ""){shortenUrl(longUrl);}else{shortenCustomUrl(name, longUrl);}
     SUBMIT_BUTTON.className = "btn btn-primary";
     SUBMIT_BUTTON.innerHTML = "Submit URL";
     SUBMIT_BUTTON.disabled = false;
@@ -85,13 +85,13 @@ function processResponse(request){
 
         case 409:
         MODAL.title.innerHTML = "409: Conflict";
-        MODAL.body.innerHTML = "Something you did created server-side conflict. Perhaps the name for your link is already in use. Here's the repsonse: " + request.response;
+        MODAL.body.innerHTML = "Something you did created server-side conflict. Perhaps the name for your link is already in use. Here's the response: " + request.response;
         MODAL.footer.innerHTML = '<button type="button" class="btn btn-primary" id="modalclosebutton">Ok</button>'
         break;
 
         default:
         MODAL.title.innerHTML = "Uh oh!";
-        MODAL.body.innerHTML = "We ran into an unknown issue. Please report this to SeductiveWalrus";
+        MODAL.body.innerHTML = "We ran into an unknown issue. Please report this response to SeductiveWalrus: " + request.response;
         MODAL.footer.innerHTML = '<button type="button" class="btn btn-primary" id="modalclosebutton">Ok</button>'
     }
     refreshConditionalHandlers();

@@ -23,7 +23,7 @@ const httpsOptions = {
     cert: fs.readFileSync(certLocations["cert"])
 };
 console.log("Done");
-6
+
 //Server
 const PORT = process.env.PORT || 80;
 const SECURE_PORT = process.env.PORT || 443;
@@ -32,27 +32,32 @@ let server_unsecure = http.createServer(app).listen(PORT);
 
 //Middleware 
 app.use((req, res, next) =>{
+    let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+    if(bans[ip]){
+        res.statusCode = 403;
+        res.sendFile(__dirname + "/public/403.html");
+    }else next();
+});
+
+app.use((req, res, next) =>{
     if(req.secure) {
         next();
     }else{
         res.redirect('https://' + req.headers.host + req.url);
     }
 });
+
 app.use(bodyParser.text());
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
 //Routing
 app.get("/", (req, res) =>{
-    res.redirect(301, "/shorten");
-});
-
-app.get("/shorten", (req, res) =>{
     res.sendFile(__dirname + "/public/index.html");
 });
 
-app.get("/custom", (req, res) =>{
-    res.sendFile(__dirname + "/public/custom.html");
+app.get("/shorten", (req, res) =>{
+    res.sendFile(__dirname + "/public/shorten.html");
 });
 
 app.get("/:id", (req, res, next) =>{
@@ -92,12 +97,6 @@ app.post("/getlinks", (req, res) =>{
 
 app.post("/shorten", (req, res) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
-    if(bans[ip]){
-        res.statusCode = 403;
-        res.send(`You have been banned for ${bans[ip]["reason"]}`);
-        console.log(`Attempted access from banned: ${ip}`);
-        return;
-    }
     if(req.body == undefined || req.body == "" || req.body == null){
         res.statusCode = 409;
         res.send("No URL found");
@@ -116,12 +115,6 @@ app.post("/shorten", (req, res) =>{
 
 app.post("/custom", (req, res) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
-    if(bans[ip]){
-        res.statusCode = 403;
-        res.send(`You have been banned for ${bans[ip]["reason"]}`);
-        console.log(`Attempted access from banned: ${ip}`);
-        return;
-    }
     let body = req.body;
     console.log(body);
     if(!body["url"] || !body["name"]){
