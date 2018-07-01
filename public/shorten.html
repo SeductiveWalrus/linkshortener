@@ -11,8 +11,19 @@
         <script src="js/typed.min.js"></script>
     </head>
     <body>
+    <div class="modal" id="modal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" id="modaltitle"></h5></div>
+                <div class="modal-body"><p id="modalbody"></p></div>
+                <div class="modal-footer" id="modalfooter"></div>
+            </div>
+        </div>
+    </div>
         <h5 class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Profile</h5>
         <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 39px, 0px); top: 0px; left: 0px; will-change: transform;">
+            <a class="dropdown-item" href="https://sedwalrus.cf/">Home</a>
+            <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="https://sedwalrus.cf/discord">Discord</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="https://sedwalrus.cf/github">GitHub</a>
@@ -23,18 +34,20 @@
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="https://sedwalrus.cf/projects">All Projects</a>
         </div>
-        <div align="center" style="margin-top: 5%;">
-           <h2>Hey</h2>
-           <p id="bio"></p>
+        <div class="form-group" style="margin-top: 5%; text-align: center">
+            <div class="form-group" style="display: inline-block">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend"><span class="input-group-text" aria-label="name">sedwalrus.cf/</span></div>
+                    <input class="form-control"  placeholder="Leave blank for random" type="text" id="nameinput">
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend"><span class="input-group-text" aria-label="name">URL:</span></div>
+                    <input class="form-control"  placeholder="Make sure it's valid" type="text" id="urlinput">
+                </div>
+                <button type="button" class="btn btn-primary" id="submitbutton">Submit URL</button>
+            </div>
         </div>
         <div style="background-image: url('/assets/walrus.svg'); bottom: 0%; position: absolute; width: 50%; height: 50%; background-size: 100%; background-repeat: no-repeat;"></div>
-    <script>
-        let typed = new Typed(document.getElementById("bio"), {
-            strings: ["I'm SeductiveWalrus, a vocational computer science student.", "I code things in my free time, mainly in js but sometimes other languages.", "Explore my profile with the dropdown."],
-            typeSpeed: 40,
-            backDelay: 1000,
-            showCursor: false
-        });
-    </script>
+        <script src="/js/shorten.js"></script>
     </body>
 </html>
