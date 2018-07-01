@@ -36,6 +36,7 @@ SUBMIT_BUTTON.onclick = e =>{
     if(name === null | name === "" | name.length === 0){shortenUrl(longUrl);}else{shortenCustomUrl(longUrl);}
     SUBMIT_BUTTON.className = "btn btn-primary";
     SUBMIT_BUTTON.innerHTML = "Submit URL";
+    SUBMIT_BUTTON.disabled = false;
     NAME_INPUT.value = "";
     URL_INPUT.value = "";
 };
@@ -87,6 +88,11 @@ function processResponse(request){
         MODAL.body.innerHTML = "Something you did created server-side conflict. Perhaps the name for your link is already in use. Here's the repsonse: " + request.response;
         MODAL.footer.innerHTML = '<button type="button" class="btn btn-primary" id="modalclosebutton">Ok</button>'
         break;
+
+        default:
+        MODAL.title.innerHTML = "Uh oh!";
+        MODAL.body.innerHTML = "We ran into an unknown issue. Please report this to SeductiveWalrus";
+        MODAL.footer.innerHTML = '<button type="button" class="btn btn-primary" id="modalclosebutton">Ok</button>'
     }
     refreshConditionalHandlers();
     MODAL.setVisible(true);
