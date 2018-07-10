@@ -1,10 +1,9 @@
 //Imports
 let express = require("express");
 let fs = require("fs");
-let redis = require("redis");
 let bodyParser = require("body-parser");
 let urlRegex = require("url-regex");
-var datetime = require('node-datetime');
+let datetime = require('node-datetime');
 let http = require("http");
 let https = require("https");
 
@@ -12,16 +11,19 @@ let https = require("https");
 let app = express();
 
 //File System
-console.log("Fetching data...");
-let links = JSON.parse(fs.readFileSync(__dirname + "/data/links.json"));
-let bans = JSON.parse(fs.readFileSync(__dirname + "/data/bans.json"));
-let adminKeys = JSON.parse(fs.readFileSync(__dirname + "/data/adminKeys.json"))["array"];
-let certLocations = JSON.parse(fs.readFileSync(__dirname + "/data/certLocations.json"));
+let files = fs.readdirSync(__dirname + "/data");
+console.log("Attempting to load " + files.length + " files");
+let data = {};
+for(i = 0; i < files.length; i++){
+    if(!files[i].endsWith(".json")) continue;
+    data[removeEndCharacters(files[i], 5)] = JSON.parse(fs.readFileSync(__dirname + "/data/" + files[i]));
+    console.log(getWholePercent(i + 1, files.length) + "%");
+}
+
 const httpsOptions = {
-    key: fs.readFileSync(certLocations["privateKey"]),
-    cert: fs.readFileSync(certLocations["cert"])
+    key: fs.readFileSync(data.certLocations["privateKey"]),
+    cert: fs.readFileSync(data.certLocations["cert"])
 };
-console.log("Done");
 
 //Server
 const PORT = process.env.PORT || 80;
@@ -30,10 +32,9 @@ let server = https.createServer(httpsOptions, app).listen(SECURE_PORT);
 let server_unsecure = http.createServer(app).listen(PORT);
 
 //Middleware 
-
 app.use((req, res, next) =>{
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
-    if(bans[ip]){
+    if(data.bans[ip]){
         res.statusCode = 403;
         res.sendFile(__dirname + "/public/403.html");
     }else next();
@@ -47,8 +48,8 @@ app.use((req, res, next) =>{
     setTimeout(() =>{
         recentReq[ip] = 0;
     }, 8000);
-    if(recentReq[ip] >= 12){
-        if(!bans[ip]){
+    if(recentReq[ip] >= 8){
+        if(!data.bans[ip]){
             banUser(ip, "Request Spam");
             next(); 
         }
@@ -77,8 +78,8 @@ app.get("/shorten", (req, res) =>{
 
 // Shortened Urls
 app.get("/:name", (req, res, next) =>{
-    if(links[req.params.name]){
-        res.redirect(301, links[req.params.name]["url"]);
+    if(data.links[req.params.name]){
+        res.redirect(301, data.links[req.params.name]["url"]);
     }else next();
 });
 
@@ -96,13 +97,13 @@ app.get("*", (req, res) =>{
 
 app.post("/getlinks", (req, res) =>{
     let body = req.body;
-    if(!body["key"] || !adminKeys.includes(body["key"])){
+    if(!body["key"] || !data.adminKeys.includes(body["key"])){
         res.status(409);
         res.send("Invalid Key");
         return;
     }
     res.setHeader("Content-Type", "application/json");
-    res.send(JSON.stringify(links));
+    res.send(JSON.stringify(data.links));
 });
 
 app.post("/shorten", (req, res) =>{
@@ -120,7 +121,7 @@ app.post("/shorten", (req, res) =>{
         return;
     } 
 
-    if(links[body["name"]]){
+    if(data.links[body["name"]]){
         res.statusCode = 409;
         res.send("This custom link is already in use"); 
         return;
@@ -136,7 +137,7 @@ app.post("/shorten", (req, res) =>{
 app.post("/admin/:action", (req, res) =>{
     let body = req.body;
     if(body){
-        if(adminKeys.includes(body["key"])){
+        if(data.adminKeys.includes(body["key"])){
             let action = req.params.action;
             switch(action){
                 case "banUser":
@@ -149,10 +150,6 @@ app.post("/admin/:action", (req, res) =>{
 
                 case "deleteLink":
                 res.send(deleteLink(body["param1"]));
-                break;
-
-                case "deleteCustomLink":
-                res.send(deleteCustomLink(body["param1"]));
                 break;
 
                 case "wipeLinks":
@@ -180,10 +177,10 @@ function randomString(length){
 function shortenURL(name, url, ip){
     if(name === "" || !name){
         name = randomString(4);
-        if(links[name]) return shortenURL(url);
+        if(data.links[name]) return shortenURL(url);
     }
 
-    links[name] = {
+    data.links[name] = {
         url: url,
         ip: ip,
         createdOn: currentDate()
@@ -194,13 +191,13 @@ function shortenURL(name, url, ip){
 }
 
 function updateLinksFile(){
-    fs.writeFile(__dirname + "/data/links.json", JSON.stringify(links, null, 2), err =>{
+    fs.writeFile(__dirname + "/data/links.json", JSON.stringify(data.links, null, 2), err =>{
         if(err) throw err;
     });
 }
 
 function updateBansFile(){
-    fs.writeFile(__dirname + "/data/bans.json", JSON.stringify(bans, null, 2), err =>{
+    fs.writeFile(__dirname + "/data/bans.json", JSON.stringify(data.bans, null, 2), err =>{
         if(err) throw err;
     });
 }
@@ -216,8 +213,8 @@ function currentDate(){
 
 function banUser(ip, reason){
     if(!ip || !reason) return "Specify an ip and reason";
-    if(bans[ip]) return `${ip} was already banned for "${bans[ip]["reason"]}"`;
-    bans[ip] = {
+    if(data.bans[ip]) return `${ip} was already banned for "${data.bans[ip]["reason"]}"`;
+    data.bans[ip] = {
         reason: reason,
         bannedOn: currentDate()
     };
@@ -228,34 +225,34 @@ function banUser(ip, reason){
 
 function unbanUser(ip){
     if(!ip) return "Specify an ip";
-    if(!bans[ip]) return `"${ip}" is not banned`;
-    delete bans[ip];
+    if(!data.bans[ip]) return `"${ip}" is not banned`;
+    delete data.bans[ip];
     updateBansFile();
     console.log(`"${ip}" was unbanned`);
     return `Unbanned "${ip}"`;
 }
 
 function deleteLink(id){
-    if(!id || !links[id]) return "Specify a valid id";
-    delete links[id];
+    if(!id || !data.links[id]) return "Specify a valid id";
+    delete data.links[id];
     updateLinksFile();
     console.log(`Link "${id}" was deleted`)
     return `Deleted link "${id}"`;
 }
 
-function deleteCustomLink(name){
-    if(!name || !customLinks[name]) return "Specify a valid name";
-    delete customLinks[name];
-    updateCustomLinksFile();
-    console.log(`Custom link "${name}" was deleted`);
-    return `Deleted custom link "${name}"`;
-}
-
 function wipeLinks(){
-    links = {};
-    customLinks = {};
+    data.links = {};
     updateLinksFile();
-    updateCustomLinksFile();
     console.log("All links wiped");
     return "All links wiped";
+}
+
+function removeEndCharacters(string, amount = 5){
+    let stringArray = string.split("");
+    stringArray.splice(stringArray.length - amount, stringArray.length - (stringArray.length - amount));
+    return stringArray.join("");
+}
+
+function getWholePercent(percentFor,percentOf){
+    return Math.floor(percentFor/percentOf*100);
 }
