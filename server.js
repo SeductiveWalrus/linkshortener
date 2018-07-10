@@ -40,22 +40,6 @@ app.use((req, res, next) =>{
     }else next();
 });
 
-let recentReq= {};
-app.use((req, res, next) =>{
-    let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
-    if(!recentReq[ip]) recentReq[ip] = 0;
-    recentReq[ip]++;    
-    setTimeout(() =>{
-        recentReq[ip] = 0;
-    }, 8000);
-    if(recentReq[ip] >= 8){
-        if(!data.bans[ip]){
-            banUser(ip, "Request Spam");
-            next(); 
-        }
-    }else next();
-});
-
 app.use((req, res, next) =>{
     if(req.secure) {
         next();
